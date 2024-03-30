@@ -1,4 +1,4 @@
-export function getImage(query) {
+export async function getImage(query) {
   const BASE_URL = 'https://pixabay.com/api/';
   const params = new URLSearchParams({
     key: '43034090-772f27db84397385e52753f5e',
@@ -10,10 +10,9 @@ export function getImage(query) {
 
   const url = `${BASE_URL}?${params}`;
 
-  return fetch(url).then(response => {
+  const response = await fetch(url);
     if (!response.ok) {
       throw new Error(response.status);
     }
     return response.json();
-  });
 }

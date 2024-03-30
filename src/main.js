@@ -20,36 +20,30 @@ function showLoader() {
 
 form.addEventListener('submit', sendForm);
 
-function sendForm(event) {
+async function sendForm(event) {
   event.preventDefault();
   showLoader();
   card.innerHTML = '';
   const inputValue = event.target.elements.search.value.trim();
-  if (inputValue !== '') {
-    getImage(inputValue)
-      .then(resolve => {
-        renderImages(resolve.hits);
-        form.reset();
-      })
-      .catch(error => {
-        console.log(error);
-        iziToast.error({
-          message: 'Sorry, an error occurred while loading. Please try again!',
-          theme: 'dark',
-          progressBarColor: '#FFFFFF',
-          color: '#EF4040',
-          position: 'topRight',
-        });
-        hideLoader();
-      });
-  } else {
-    iziToast.show({
-      message: 'Please complete the field!',
+  
+  try {
+    if (inputValue !== '') {
+      const resolve = await getImage(inputValue);
+      renderImages(resolve.hits);
+      form.reset();
+    } else {
+      throw new Error('Please complete the field!');
+    }
+  } catch (error) {
+    console.log(error);
+    iziToast.error({
+      message: 'Sorry, an error occurred while loading. Please try again!',
       theme: 'dark',
       progressBarColor: '#FFFFFF',
       color: '#EF4040',
       position: 'topRight',
     });
+  } finally {
     hideLoader();
   }
 }
