@@ -25,7 +25,7 @@ async function sendForm(event) {
   showLoader();
   card.innerHTML = '';
   const inputValue = event.target.elements.search.value.trim();
-  
+
   try {
     if (inputValue !== '') {
       const resolve = await getImage(inputValue);

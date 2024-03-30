@@ -1,3 +1,4 @@
+import axios from 'axios';
 export async function getImage(query) {
   const BASE_URL = 'https://pixabay.com/api/';
   const params = new URLSearchParams({
@@ -10,9 +11,10 @@ export async function getImage(query) {
 
   const url = `${BASE_URL}?${params}`;
 
-  const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(response.status);
-    }
-    return response.json();
+  try {
+    const response = await axios.get(url);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response.status);
+  }
 }
