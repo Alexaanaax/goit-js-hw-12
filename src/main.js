@@ -1,49 +1,105 @@
-import { getImage } from './js/pixabay-api';
-import { renderImages } from './js/render-functions';
-import { hideLoader } from './js/render-functions';
-import { card } from './js/render-functions';
+import axios from 'axios';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-export const lightbox = new SimpleLightbox('.gallery a', {
+
+import { getImages } from './js/pixabay-api.js';
+import { render } from './js/render-functions.js';
+
+export const lightbox = new SimpleLightbox('.gallery-link', {
   captionsData: 'alt',
   captionDelay: 250,
 });
 
-export const preloader = document.querySelector('.loader');
-const form = document.querySelector('.search-form');
+export const refs = {
+  form: document.querySelector('.form'),
+  searchInput: document.getElementById('searchInput'),
+  searchBtn: document.querySelector('button'),
+  loadBtn: document.querySelector('.load-more-button'),
+  loader: document.querySelector('.loader'),
+  gallery: document.querySelector('.gallery'),
+};
 
-function showLoader() {
-  preloader.classList.remove('is-hidden');
-}
+export let query = '';
+export let currentPage = 1;
+export let pageLimit = 15;
 
-form.addEventListener('submit', sendForm);
+hideLoader();
+hideLoadBtn();
 
-async function sendForm(event) {
+refs.form.addEventListener('submit', async event => {
   event.preventDefault();
-  showLoader();
-  card.innerHTML = '';
-  const inputValue = event.target.elements.search.value.trim();
-
+  currentPage = 1;
+  refs.gallery.innerHTML = '';
+  query = refs.searchInput.value.trim();
+  if (query !== '') {
+    try {
+      const data = await getImages(query, currentPage);
+      const maxPage = Math.ceil(data.totalHits / pageLimit);
+      render(data);
+      hideLoader();
+      if (currentPage >= maxPage) {
+        hideLoadBtn();
+      } else {
+        showLoadBtn();
+      }
+    } catch (error) {
+      console.log(error);
+      displayMessage('An error occurred while fetching data.');
+      hideLoadBtn();
+    }
+  } else {
+    displayMessage('Empty field!');
+    hideLoadBtn();
+  }
+  refs.form.reset();
+});
+refs.loadBtn.addEventListener('click', async onLoadMoreClick => {
+  currentPage += 1;
   try {
-    if (inputValue !== '') {
-      const resolve = await getImage(inputValue);
-      renderImages(resolve.hits);
-      form.reset();
-    } else {
-      throw new Error('Please complete the field!');
+    const data = await getImages(query, currentPage);
+    hideLoader();
+    render(data);
+    showLoadBtn();
+    const item = document.querySelector('.gallery-item');
+    const rect = item.getBoundingClientRect();
+    window.scrollBy({
+      top: rect.height * 2,
+      behavior: 'smooth',
+    });
+    const maxPage = Math.ceil(data.totalHits / pageLimit);
+    if (currentPage >= maxPage) {
+      hideLoadBtn();
     }
   } catch (error) {
     console.log(error);
-    iziToast.error({
-      message: 'Sorry, an error occurred while loading. Please try again!',
-      theme: 'dark',
-      progressBarColor: '#FFFFFF',
-      color: '#EF4040',
-      position: 'topRight',
-    });
-  } finally {
-    hideLoader();
+    displayMessage('An error occurred while fetching data.');
+    hideLoadBtn();
   }
+});
+
+export function displayMessage(message) {
+  iziToast.error({
+    title: 'Error',
+    message: message,
+    position: 'topRight',
+    backgroundColor: 'red',
+  });
+}
+
+export function hideLoader() {
+  refs.loader.style.display = 'none';
+}
+
+export function showLoader() {
+  refs.loader.style.display = 'block';
+}
+
+function hideLoadBtn() {
+  refs.loadBtn.style.display = 'none';
+}
+
+function showLoadBtn() {
+  refs.loadBtn.style.display = 'block';
 }

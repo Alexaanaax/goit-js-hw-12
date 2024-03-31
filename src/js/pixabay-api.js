@@ -1,20 +1,23 @@
 import axios from 'axios';
-export async function getImage(query) {
-  const BASE_URL = 'https://pixabay.com/api/';
-  const params = new URLSearchParams({
+import { refs, query, showLoader, currentPage, pageLimit } from '../main';
+
+const myAxios = axios.create({
+  baseURL: 'https://pixabay.com/api/',
+});
+
+export async function getImages() {
+  const params = {
     key: '43034090-772f27db84397385e52753f5e',
     q: query,
+    per_page: pageLimit,
+    page: currentPage,
     image_type: 'photo',
     orientation: 'horizontal',
-    safesearch: true,
-  });
+    safesearch: 'true',
+  };
 
-  const url = `${BASE_URL}?${params}`;
+  showLoader();
 
-  try {
-    const response = await axios.get(url);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response.status);
-  }
+  const response = await myAxios.get('', { params });
+  return response.data;
 }
